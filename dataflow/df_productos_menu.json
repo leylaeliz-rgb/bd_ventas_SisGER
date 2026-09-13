@@ -12,10 +12,21 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "productos_menu_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "derivedColumn1"
+				},
+				{
+					"name": "split1"
 				}
 			],
 			"scriptLines": [
@@ -30,7 +41,38 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source1",
-				"source1 derive() ~> derivedColumn1"
+				"source1 derive(nombre_producto = initCap(trim(nombre_producto)),",
+				"          categoria = initCap(trim(categoria)),",
+				"          precio_lista = toDecimal(trim(regexReplace(lower(precio_lista), '[^0-9.-]', '')), 10, 2),",
+				"          costo_estimado = toDecimal(trim(regexReplace(lower(costo_estimado), '[^0-9.-]', '')), 10, 2)) ~> derivedColumn1",
+				"derivedColumn1 split(!isNull(precio_lista) && precio_lista >= 0.00 && !isNull(costo_estimado) && costo_estimado >= 0.00,",
+				"     disjoint: false) ~> split1@(valido, rechazado)",
+				"split1@valido sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          producto_id as string,",
+				"          nombre_producto as string,",
+				"          categoria as string,",
+				"          precio_lista as decimal(12,2),",
+				"          costo_estimado as decimal(12,2),",
+				"          disponible as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          producto_id,",
+				"          nombre_producto,",
+				"          categoria,",
+				"          precio_lista,",
+				"          costo_estimado,",
+				"          disponible",
+				"     )) ~> sink1"
 			]
 		}
 	}
