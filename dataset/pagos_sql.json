@@ -1,0 +1,48 @@
+{
+	"name": "pagos_sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sql_omnicanal",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "pago_id",
+				"type": "varchar"
+			},
+			{
+				"name": "pedido_id",
+				"type": "varchar"
+			},
+			{
+				"name": "fecha_pago",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "metodo_pago",
+				"type": "nvarchar"
+			},
+			{
+				"name": "estado_pago",
+				"type": "nvarchar"
+			},
+			{
+				"name": "monto_pagado",
+				"type": "decimal",
+				"precision": 12,
+				"scale": 2
+			}
+		],
+		"typeProperties": {
+			"schema": "rest_omnicanal",
+			"table": "pagos"
+		}
+	}
+}
