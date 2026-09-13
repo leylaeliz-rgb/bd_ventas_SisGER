@@ -12,10 +12,21 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "promociones_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "derivedColumn1"
+				},
+				{
+					"name": "filter1"
 				}
 			],
 			"scriptLines": [
@@ -30,7 +41,38 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source1",
-				"source1 derive() ~> derivedColumn1"
+				"source1 derive(nombre_promocion = initCap(trim(nombre_promocion)),",
+				"          canal_aplicable = initCap(trim(canal_aplicable)),",
+				"          porcentaje_descuento = toDecimal(trim(porcentaje_descuento), 5, 2),",
+				"          fecha_inicio = toDate(trim(fecha_inicio), 'yyyy-MM-dd'),",
+				"          fecha_fin = toDate(trim(fecha_fin), 'yyyy-MM-dd')) ~> derivedColumn1",
+				"derivedColumn1 filter(isNull(fecha_fin) || isNull(fecha_inicio) || fecha_fin >= fecha_inicio) ~> filter1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          promocion_id as string,",
+				"          nombre_promocion as string,",
+				"          fecha_inicio as date,",
+				"          fecha_fin as date,",
+				"          porcentaje_descuento as decimal(5,2),",
+				"          canal_aplicable as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          promocion_id,",
+				"          nombre_promocion,",
+				"          fecha_inicio,",
+				"          fecha_fin,",
+				"          porcentaje_descuento,",
+				"          canal_aplicable",
+				"     )) ~> sink1"
 			]
 		}
 	}
