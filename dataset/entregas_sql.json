@@ -1,0 +1,60 @@
+{
+	"name": "entregas_sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sql_omnicanal",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "entrega_id",
+				"type": "varchar"
+			},
+			{
+				"name": "pedido_id",
+				"type": "varchar"
+			},
+			{
+				"name": "repartidor_id",
+				"type": "varchar"
+			},
+			{
+				"name": "hora_salida",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "hora_entrega",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "tiempo_entrega_min",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "distancia_km",
+				"type": "decimal",
+				"precision": 6,
+				"scale": 2
+			},
+			{
+				"name": "estado_entrega",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "rest_omnicanal",
+			"table": "entregas"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,48 @@
+{
+	"name": "calificacion_sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sql_omnicanal",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "calificacion_id",
+				"type": "varchar"
+			},
+			{
+				"name": "pedido_id",
+				"type": "varchar"
+			},
+			{
+				"name": "cliente_id",
+				"type": "varchar"
+			},
+			{
+				"name": "fecha_calificacion",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "puntuacion",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "comentario",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "rest_omnicanal",
+			"table": "calificaciones"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
