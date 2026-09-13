@@ -27,6 +27,9 @@
 				},
 				{
 					"name": "filter1"
+				},
+				{
+					"name": "split1"
 				}
 			],
 			"scriptLines": [
@@ -47,7 +50,9 @@
 				"          fecha_inicio = toDate(trim(fecha_inicio), 'yyyy-MM-dd'),",
 				"          fecha_fin = toDate(trim(fecha_fin), 'yyyy-MM-dd')) ~> derivedColumn1",
 				"derivedColumn1 filter(isNull(fecha_fin) || isNull(fecha_inicio) || fecha_fin >= fecha_inicio) ~> filter1",
-				"filter1 sink(allowSchemaDrift: true,",
+				"filter1 split(porcentaje_descuento >= 0.00 && porcentaje_descuento <= 100.00,",
+				"     disjoint: false) ~> split1@(valido, rechazado)",
+				"split1@valido sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          promocion_id as string,",

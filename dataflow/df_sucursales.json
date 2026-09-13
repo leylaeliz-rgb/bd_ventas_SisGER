@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "df_sucursales",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -12,8 +12,29 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "sucursales_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "derivedColumn2"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          sucursal_id as string,",
@@ -27,7 +48,56 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source1"
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(capacidad_mesas = toInteger(capacidad_mesas),",
+				"          sucursal_id = upper(trim(sucursal_id)),",
+				"          restaurante_id = upper(trim(restaurante_id)),",
+				"          nombre_sucursal = initCap(trim(nombre_sucursal)),",
+				"          ciudad = initCap(trim(ciudad)),",
+				"          zona = initCap(trim(zona)),",
+				"          direccion = trim(direccion),",
+				"          tiene_delivery = iif(in(['si', 'sí', 'true', '1'], lower(trim(tiene_delivery))), 'Sí', 'No')) ~> derivedColumn1",
+				"derivedColumn1 split(!isNull(sucursal_id) && !isNull(restaurante_id) &&!isNull(nombre_sucursal) &&!isNull(ciudad) &&!isNull(zona) &&!isNull(direccion) &&!isNull(capacidad_mesas) &&!isNull(tiene_delivery),",
+				"     disjoint: false) ~> split1@(valido, rechazado)",
+				"split1@valido aggregate(groupBy(sucursal_id),",
+				"     restaurante_id = first(restaurante_id),",
+				"          nombre_sucursal = first(nombre_sucursal),",
+				"          ciudad = first(ciudad),",
+				"          zona = first(zona),",
+				"          direccion = first(direccion),",
+				"          tiene_delivery = first(tiene_delivery),",
+				"          capacidad_mesas = max(capacidad_mesas)) ~> aggregate1",
+				"aggregate1 derive(nombre_sucursal = trim(regexReplace(nombre_sucursal, ciudad + '|-', ''))) ~> derivedColumn2",
+				"derivedColumn2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          sucursal_id as string,",
+				"          restaurante_id as string,",
+				"          nombre_sucursal as string,",
+				"          ciudad as string,",
+				"          zona as string,",
+				"          direccion as string,",
+				"          capacidad_mesas as integer,",
+				"          tiene_delivery as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          sucursal_id,",
+				"          restaurante_id,",
+				"          nombre_sucursal,",
+				"          ciudad,",
+				"          zona,",
+				"          direccion,",
+				"          capacidad_mesas,",
+				"          tiene_delivery",
+				"     )) ~> sink1"
 			]
 		}
 	}
