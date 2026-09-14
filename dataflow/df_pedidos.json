@@ -1,0 +1,116 @@
+{
+	"name": "df_pedidos",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "pedidos_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "pedidos_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          pedido_id as string,",
+				"          fecha_pedido as string,",
+				"          hora_pedido as string,",
+				"          cliente_id as string,",
+				"          sucursal_id as string,",
+				"          canal as string,",
+				"          tipo_servicio as string,",
+				"          estado_pedido as string,",
+				"          promocion_id as string,",
+				"          subtotal as string,",
+				"          costo_delivery as string,",
+				"          descuento as string,",
+				"          impuesto as string,",
+				"          total_pedido as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(pedido_id = upper(pedido_id),",
+				"          cliente_id = upper(cliente_id),",
+				"          sucursal_id = upper(sucursal_id),",
+				"          promocion_id = iif(isNull(promocion_id) || trim(promocion_id) == '', toString(null()), upper(trim(promocion_id))),",
+				"          fecha_pedido = toDate(trim(fecha_pedido), 'yyyy-MM-dd'),",
+				"          hora_pedido = toTimestamp(trim(hora_pedido), 'HH:mm:ss'),",
+				"          canal = initCap(trim(canal)),",
+				"          tipo_servicio = initCap(trim(tipo_servicio)),",
+				"          estado_pedido = iif(lower(trim(estado_pedido)) == 'completado', 'Entregado', initCap(trim(estado_pedido)))) ~> derivedColumn1",
+				"derivedColumn1 derive(subtotal = toDecimal(trim(subtotal), 10, 2),",
+				"          costo_delivery = toDecimal(trim(costo_delivery), 10, 2),",
+				"          descuento = toDecimal(trim(descuento), 10, 2),",
+				"          impuesto = toDecimal(trim(impuesto), 10, 2),",
+				"          total_pedido = toDecimal(trim(total_pedido), 10, 2)) ~> derivedColumn2",
+				"derivedColumn2 split(subtotal >= 0.00 &&  costo_delivery >= 0.00 &&  descuento >= 0.00 &&  impuesto >= 0.00 &&  total_pedido == (subtotal + costo_delivery - descuento + impuesto),",
+				"     disjoint: false) ~> split1@(valido, rechazado)",
+				"split1@valido sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          pedido_id as string,",
+				"          fecha_pedido as date,",
+				"          hora_pedido as timestamp,",
+				"          cliente_id as string,",
+				"          sucursal_id as string,",
+				"          canal as string,",
+				"          tipo_servicio as string,",
+				"          estado_pedido as string,",
+				"          promocion_id as string,",
+				"          subtotal as decimal(12,2),",
+				"          costo_delivery as decimal(12,2),",
+				"          descuento as decimal(12,2),",
+				"          impuesto as decimal(12,2),",
+				"          total_pedido as decimal(12,2)",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          pedido_id,",
+				"          fecha_pedido,",
+				"          hora_pedido,",
+				"          cliente_id,",
+				"          sucursal_id,",
+				"          canal,",
+				"          tipo_servicio,",
+				"          estado_pedido,",
+				"          promocion_id,",
+				"          subtotal,",
+				"          costo_delivery,",
+				"          descuento,",
+				"          impuesto,",
+				"          total_pedido",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

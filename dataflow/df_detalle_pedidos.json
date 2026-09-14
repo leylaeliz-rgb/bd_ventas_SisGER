@@ -1,0 +1,38 @@
+{
+	"name": "df_detalle_pedidos",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "detalle_pedidos_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false) ~> source1",
+				"source(output(",
+				"          detalle_id as string,",
+				"          pedido_id as string,",
+				"          producto_id as string,",
+				"          cantidad as string,",
+				"          precio_unitario as string,",
+				"          descuento_linea as string,",
+				"          total_linea as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source2"
+			]
+		}
+	}
+}
