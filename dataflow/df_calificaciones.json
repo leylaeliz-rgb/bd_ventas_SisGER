@@ -1,0 +1,73 @@
+{
+	"name": "df_calificaciones",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "calificacion_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "calificacion_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "split1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          calificacion_id as string,",
+				"          pedido_id as string,",
+				"          cliente_id as string,",
+				"          fecha_calificacion as string,",
+				"          puntuacion as string,",
+				"          comentario as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(calificacion_id = upper(trim(calificacion_id)),",
+				"          pedido_id = upper(trim(pedido_id)),",
+				"          cliente_id = upper(trim(cliente_id)),",
+				"          fecha_calificacion = toDate(trim(fecha_calificacion), 'yyyy-MM-dd'),",
+				"          puntuacion = toInteger(trim(puntuacion)),",
+				"          comentario = iif(isNull(comentario) || length(trim(comentario)) == 0, 'Sin comentario', initCap(trim(comentario)))) ~> derivedColumn1",
+				"derivedColumn1 split(!isNull(calificacion_id) &&  !isNull(pedido_id) && pedido_id != 'PED999999' && !isNull(cliente_id) &&  !isNull(fecha_calificacion) &&  !isNull(puntuacion) && puntuacion >= 1 && puntuacion <= 5,",
+				"     disjoint: false) ~> split1@(valido, rechazado)",
+				"split1@valido sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          calificacion_id as string,",
+				"          pedido_id as string,",
+				"          cliente_id as string,",
+				"          fecha_calificacion as timestamp,",
+				"          puntuacion as integer,",
+				"          comentario as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+			]
+		}
+	}
+}
