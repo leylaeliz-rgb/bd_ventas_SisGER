@@ -15,8 +15,23 @@
 					"name": "source2"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "detalle_pedidos_sql",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "split1"
+				}
+			],
 			"scriptLines": [
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false) ~> source1",
@@ -31,7 +46,35 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source2"
+				"     ignoreNoFilesFound: false) ~> source2",
+				"source2 derive(detalle_id = upper(trim(detalle_id)),",
+				"          pedido_id = upper(trim(pedido_id)),",
+				"          producto_id = upper(trim(producto_id)),",
+				"          cantidad = toInteger(trim(cantidad)),",
+				"          precio_unitario = toDecimal(replace(trim(precio_unitario), ',', '.'), 10, 2),",
+				"          descuento_linea = toDecimal(replace(trim(descuento_linea), ',', '.'), 10, 2),",
+				"          total_linea = toDecimal(replace(trim(total_linea), ',', '.'), 10, 2)) ~> derivedColumn1",
+				"derivedColumn1 split(!isNull(detalle_id) &&  !isNull(pedido_id) &&  !isNull(producto_id) &&  cantidad > 0 &&  precio_unitario >= 0.00 &&  descuento_linea >= 0.00 &&  total_linea == round((cantidad * precio_unitario) - descuento_linea, 2),",
+				"     disjoint: false) ~> split1@(valido, rechazado)",
+				"split1@valido sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          detalle_id as string,",
+				"          pedido_id as string,",
+				"          producto_id as string,",
+				"          cantidad as integer,",
+				"          precio_unitario as decimal(12,2),",
+				"          descuento_linea as decimal(12,2),",
+				"          total_linea as decimal(12,2)",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}
