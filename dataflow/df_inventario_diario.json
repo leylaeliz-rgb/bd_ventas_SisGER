@@ -1,5 +1,5 @@
 {
-	"name": "df_inventario_df",
+	"name": "df_inventario_diario",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
